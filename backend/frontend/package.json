@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "autocomplete-backend": "file:.."
+  }
+}

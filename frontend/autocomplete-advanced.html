@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Autocomplete Dropdown</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            animation: gradientShift 15s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            font-size: 28px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 24px;
+            animation: fadeIn 1s ease-out 0.2s both;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .autocomplete-wrapper {
+            position: relative;
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .autocomplete-input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            will-change: border-color, box-shadow, transform;
+        }
+
+        .autocomplete-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 8px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .autocomplete-input::placeholder {
+            color: #999;
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transform-origin: top;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 1000;
+            will-change: opacity, visibility, transform;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        }
+
+        .dropdown.open {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .suggestions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .suggestion-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid #f0f0f0;
+            will-change: background-color, transform, color;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: itemSlideIn 0.4s ease-out forwards;
+        }
+
+        .suggestion-item:nth-child(1) { animation-delay: 0.05s; }
+        .suggestion-item:nth-child(2) { animation-delay: 0.1s; }
+        .suggestion-item:nth-child(3) { animation-delay: 0.15s; }
+        .suggestion-item:nth-child(4) { animation-delay: 0.2s; }
+        .suggestion-item:nth-child(5) { animation-delay: 0.25s; }
+        .suggestion-item:nth-child(6) { animation-delay: 0.3s; }
+        .suggestion-item:nth-child(7) { animation-delay: 0.35s; }
+        .suggestion-item:nth-child(8) { animation-delay: 0.4s; }
+        .suggestion-item:nth-child(9) { animation-delay: 0.45s; }
+        .suggestion-item:nth-child(10) { animation-delay: 0.5s; }
+
+        @keyframes itemSlideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .suggestion-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .suggestion-item:hover::before {
+            left: 100%;
+        }
+
+        .suggestion-text {
+            position: relative;
+            z-index: 1;
+            color: #333;
+            transition: color 0.2s ease;
+            font-size: 15px;
+        }
+
+        .suggestion-item:hover {
+            background: linear-gradient(90deg, #f5f5ff 0%, #ffffff 100%);
+            transform: translateX(4px);
+            color: #667eea;
+        }
+
+        .suggestion-item:hover .suggestion-text {
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .suggestion-item:active {
+            transform: scale(0.98) translateX(4px);
+        }
+
+        .suggestion-item:focus {
+            outline: 2px solid #667eea;
+            outline-offset: -2px;
+        }
+
+        .suggestion-item.focused {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #999;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.6;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .empty-text {
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* Scrollbar styling */
+        .dropdown::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .dropdown::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        .dropdown::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            min-height: 40px;
+            transition: background 0.3s ease;
+        }
+
+        .dropdown::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #764ba2 0%, #667eea 100%);
+        }
+
+        /* Firefox scrollbar */
+        .dropdown {
+            scrollbar-color: #667eea #f1f1f1;
+            scrollbar-width: thin;
+        }
+
+        .counter {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            }
+
+            .container {
+                background: #0f3460;
+                color: #e0e0e0;
+            }
+
+            h1 {
+                color: #00d4ff;
+            }
+
+            .subtitle, .counter {
+                color: #999;
+            }
+
+            .autocomplete-input {
+                background: #1a1a2e;
+                border-color: #333;
+                color: #e0e0e0;
+            }
+
+            .autocomplete-input:focus {
+                border-color: #00d4ff;
+                box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.15), 0 8px 20px rgba(0, 212, 255, 0.3);
+            }
+
+            .autocomplete-input::placeholder {
+                color: #666;
+            }
+
+            .dropdown {
+                background: #1a1a2e;
+                border-color: #333;
+            }
+
+            .suggestion-item {
+                border-bottom-color: #222;
+                color: #e0e0e0;
+            }
+
+            .suggestion-item:hover {
+                background: rgba(0, 212, 255, 0.1);
+                color: #00d4ff;
+            }
+
+            .suggestion-item:hover .suggestion-text {
+                color: #00d4ff;
+            }
+
+            .empty-state {
+                color: #666;
+            }
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 24px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .dropdown {
+                max-height: 300px;
+            }
+
+            .suggestion-item {
+                padding: 10px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Premium Autocomplete</h1>
+        <p class="subtitle">Try typing a programming language</p>
+
+        <div class="autocomplete-wrapper">
+            <input
+                type="text"
+                id="searchInput"
+                class="autocomplete-input"
+                placeholder="Search technologies, frameworks, tools..."
+                autocomplete="off"
+                aria-label="Search input"
+                aria-autocomplete="list"
+                role="combobox"
+                aria-expanded="false"
+                aria-controls="suggestionsList"
+            >
+
+            <div id="dropdown" class="dropdown" role="listbox">
+                <ul id="suggestionsList" class="suggestions-list" role="presentation"></ul>
+                <div id="emptyState" class="empty-state" style="display: none;">
+                    <span class="empty-icon">🔍</span>
+                    <div class="empty-text">No suggestions found</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="counter">
+            <span id="resultCount">0</span> suggestions available
+        </div>
+    </div>
+
+    <script>
+        // Autocomplete Component
+        class PremiumAutocomplete {
+            constructor(inputSelector, dropdownSelector, suggestionsSelector) {
+                this.input = document.querySelector(inputSelector);
+                this.dropdown = document.querySelector(dropdownSelector);
+                this.suggestionsList = document.querySelector(suggestionsSelector);
+                this.emptyState = this.dropdown.querySelector('#emptyState');
+                this.resultCount = document.querySelector('#resultCount');
+
+                // Sample data
+                this.allSuggestions = [
+                    'JavaScript', 'Python', 'Java', 'C++', 'C#', 'Ruby', 'PHP', 'Go', 'Rust', 'TypeScript',
+                    'React', 'Vue', 'Angular', 'Next.js', 'Nuxt', 'Express', 'Django', 'Flask', 'Spring', 'Laravel',
+                    'Node.js', 'Webpack', 'Vite', 'Babel', 'ESLint', 'Prettier', 'Jest', 'Mocha',
+                    'MongoDB', 'PostgreSQL', 'MySQL', 'Redis', 'Firebase', 'GraphQL', 'REST API',
+                    'Docker', 'Kubernetes', 'Git', 'GitHub', 'GitLab', 'AWS', 'Azure', 'Google Cloud',
+                    'HTML', 'CSS', 'SASS', 'TailwindCSS', 'Bootstrap', 'Material Design'
+                ];
+
+                this.currentFocusIndex = -1;
+                this.filteredSuggestions = [];
+
+                this.init();
+            }
+
+            init() {
+                this.input.addEventListener('input', (e) => this.handleInput(e));
+                this.input.addEventListener('focus', () => this.openDropdown());
+                this.input.addEventListener('keydown', (e) => this.handleKeyboard(e));
+                document.addEventListener('click', (e) => this.handleOutsideClick(e));
+                this.updateResultCount();
+            }
+
+            handleInput(e) {
+                const query = e.target.value.toLowerCase().trim();
+                this.currentFocusIndex = -1;
+
+                if (!query) {
+                    this.filteredSuggestions = this.allSuggestions;
+                } else {
+                    this.filteredSuggestions = this.allSuggestions.filter(item =>
+                        item.toLowerCase().startsWith(query)
+                    );
+                }
+
+                this.renderSuggestions();
+                this.updateResultCount();
+
+                if (this.filteredSuggestions.length > 0) {
+                    this.openDropdown();
+                } else {
+                    this.dropdown.classList.add('open');
+                }
+            }
+
+            renderSuggestions() {
+                this.suggestionsList.innerHTML = '';
+
+                if (this.filteredSuggestions.length === 0) {
+                    this.emptyState.style.display = 'block';
+                    return;
+                }
+
+                this.emptyState.style.display = 'none';
+
+                this.filteredSuggestions.forEach((suggestion, index) => {
+                    const li = document.createElement('li');
+                    li.className = 'suggestion-item';
+                    li.setAttribute('role', 'option');
+                    li.setAttribute('data-index', index);
+                    li.innerHTML = `<span class="suggestion-text">${this.highlightMatch(suggestion)}</span>`;
+
+                    li.addEventListener('click', () => this.selectSuggestion(suggestion));
+                    li.addEventListener('mouseenter', () => this.setFocus(index));
+
+                    this.suggestionsList.appendChild(li);
+                });
+            }
+
+            highlightMatch(suggestion) {
+                const query = this.input.value.toLowerCase();
+                if (!query) return suggestion;
+
+                const index = suggestion.toLowerCase().indexOf(query);
+                if (index === -1) return suggestion;
+
+                const before = suggestion.slice(0, index);
+                const match = suggestion.slice(index, index + query.length);
+                const after = suggestion.slice(index + query.length);
+
+                return `${before}<strong style="color: #667eea; font-weight: 600;">${match}</strong>${after}`;
+            }
+
+            handleKeyboard(e) {
+                if (!this.dropdown.classList.contains('open')) {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        this.openDropdown();
+                        e.preventDefault();
+                    }
+                    return;
+                }
+
+                switch (e.key) {
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.setFocus(this.currentFocusIndex + 1);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.setFocus(this.currentFocusIndex - 1);
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (this.currentFocusIndex >= 0) {
+                            this.selectSuggestion(this.filteredSuggestions[this.currentFocusIndex]);
+                        }
+                        break;
+                    case 'Escape':
+                        this.closeDropdown();
+                        break;
+                }
+            }
+
+            setFocus(index) {
+                // Remove previous focus
+                document.querySelectorAll('.suggestion-item').forEach(item => {
+                    item.classList.remove('focused');
+                });
+
+                // Clamp index
+                if (index < 0) index = -1;
+                if (index >= this.filteredSuggestions.length) index = this.filteredSuggestions.length - 1;
+
+                this.currentFocusIndex = index;
+
+                if (index >= 0 && index < this.filteredSuggestions.length) {
+                    const items = document.querySelectorAll('.suggestion-item');
+                    const focusedItem = items[index];
+                    focusedItem.classList.add('focused');
+                    focusedItem.focus();
+
+                    // Scroll into view
+                    focusedItem.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest'
+                    });
+                }
+            }
+
+            selectSuggestion(suggestion) {
+                this.input.value = suggestion;
+                this.closeDropdown();
+                this.filteredSuggestions = [];
+                this.suggestionsList.innerHTML = '';
+
+                // Trigger custom event
+                this.input.dispatchEvent(new CustomEvent('suggestionSelected', {
+                    detail: { suggestion }
+                }));
+
+                console.log('Selected:', suggestion);
+            }
+
+            openDropdown() {
+                this.dropdown.classList.add('open');
+                this.input.setAttribute('aria-expanded', 'true');
+            }
+
+            closeDropdown() {
+                this.dropdown.classList.remove('open');
+                this.input.setAttribute('aria-expanded', 'false');
+                this.currentFocusIndex = -1;
+            }
+
+            handleOutsideClick(e) {
+                if (!this.input.contains(e.target) && !this.dropdown.contains(e.target)) {
+                    this.closeDropdown();
+                }
+            }
+
+            updateResultCount() {
+                const count = this.input.value.trim() ? this.filteredSuggestions.length : this.allSuggestions.length;
+                this.resultCount.textContent = count;
+            }
+
+            // Public API
+            addSuggestion(suggestion) {
+                if (!this.allSuggestions.includes(suggestion)) {
+                    this.allSuggestions.push(suggestion);
+                    this.allSuggestions.sort();
+                    this.updateResultCount();
+                }
+            }
+
+            setSuggestions(suggestions) {
+                this.allSuggestions = suggestions;
+                this.updateResultCount();
+            }
+        }
+
+        // Initialize
+        const autocomplete = new PremiumAutocomplete(
+            '#searchInput',
+            '#dropdown',
+            '#suggestionsList'
+        );
+
+        // Listen for selection
+        document.querySelector('#searchInput').addEventListener('suggestionSelected', (e) => {
+            console.log('Selection event:', e.detail.suggestion);
+            // You can send this to your backend API here
+        });
+    </script>
+</body>
+</html>
