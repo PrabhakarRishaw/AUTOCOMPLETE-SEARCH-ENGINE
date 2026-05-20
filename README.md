@@ -1,4 +1,4 @@
-# Search Autocomplete Engine
+# SEARCH AUTOCOMPLETE ENGINE
 
 A full-stack search autocomplete engine built with Node.js backend and React frontend.
 
